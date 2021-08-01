@@ -3,6 +3,8 @@
 import re
 import pandas
 import itertools
+
+# sample workout log text
 wo_log_str = """d 7/20/2021
 s shoulder day
 e upright row
@@ -17,10 +19,8 @@ e bent row
 v 220: 16 14 13 11 10
 """
 
-csv_export_arr = []
-
-lines = wo_log_str.splitlines()
-len_lines = len(lines)
+# function declarations
+# todo: refactor as class, make more modular and extensible (e.g. RIR etc)
 
 def get_woday_bodies(str):
     split_wodays = re.split(r"d (.*)\n", str)[1:]
@@ -49,11 +49,6 @@ def get_vol_weight_reps(tuple_str):
     volume_list = list(map(get_volume_bodies, exercise_list))
     return volume_list
 
-woday_bodies = get_woday_bodies(wo_log_str)
-session_list = list(map(get_session_bodies, woday_bodies))
-# print(session_list)
-
-vol_weight_list = list(map(get_vol_weight_reps, session_list))
 
 def flatten_output_list(input_list):
     if list not in [type(item) for item in input_list[0]]:
@@ -61,9 +56,13 @@ def flatten_output_list(input_list):
     else:
         return flatten_output_list(list(itertools.chain.from_iterable(input_list)))
 
+# execution of functions
+woday_bodies = get_woday_bodies(wo_log_str)
+session_list = list(map(get_session_bodies, woday_bodies))
+vol_weight_list = list(map(get_vol_weight_reps, session_list))
+
 flattened_output_list = flatten_output_list(vol_weight_list)
 
 output_df = pandas.DataFrame(flattened_output_list)
 output_df.columns = ["Date", "Session", "Exercise", "Weight", "Set Reps", "Notes"]
-print(output_df)
 output_df.to_csv("workout_log_export.csv", index=False)
