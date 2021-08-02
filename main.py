@@ -1,23 +1,16 @@
 # -*- coding: utf-8 -*-
 
 import re
-import pandas
 import itertools
+import sys
 
-# sample workout log text
-wo_log_str = """d 7/20/2021
-s shoulder day
-e upright row
-v 70: 12 10 9 rest was too short 8 7 lorem ipsum
-e cable lateral raise
-v 20: 15 13 10 10 9
-v 10: 12 9
+import pandas
 
-d 7/21/2021
-s back
-e bent row
-v 220: 16 14 13 11 10
-"""
+wo_log_input_path = sys.argv[1]
+wo_log_csv_export_path = sys.argv[2]
+
+with open(wo_log_input_path, 'r') as wo_log_f:
+    wo_log_str = wo_log_f.read()
 
 # function declarations
 # todo: refactor as class, make more modular and extensible (e.g. RIR etc)
@@ -56,13 +49,22 @@ def flatten_output_list(input_list):
     else:
         return flatten_output_list(list(itertools.chain.from_iterable(input_list)))
 
-# execution of functions
+# get workout day text bodies
 woday_bodies = get_woday_bodies(wo_log_str)
+
+# get session bodies for workout day text
 session_list = list(map(get_session_bodies, woday_bodies))
+
+# get volume data
 vol_weight_list = list(map(get_vol_weight_reps, session_list))
 
+# flatten nested output list
 flattened_output_list = flatten_output_list(vol_weight_list)
 
+# create dataframe
 output_df = pandas.DataFrame(flattened_output_list)
+
+# export to csv
+# todo: make columns vary based on rep or set tracking
 output_df.columns = ["Date", "Session", "Exercise", "Weight", "Set Reps", "Notes"]
-output_df.to_csv("workout_log_export.csv", index=False)
+output_df.to_csv(wo_log_csv_export_path, index=False)
